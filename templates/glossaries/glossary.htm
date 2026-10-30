@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RimWorld Translation: {{EnglishNameFriendly}} Glossary</title>
+    <link rel="stylesheet" href="../static/style.css" />
+    <script src="../static/script.js"></script>
+  </head>
+
+  <body>
+    <div class="wh-container">
+      <div class="wh-header">
+        <h1>RimWorld Translation</h1>
+      </div>
+
+      <div class="wh-content">
+        <nav aria-label="Breadcrumb" class="wh-breadcrumbs">
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/glossaries/">Glossaries</a></li>
+            <li class="current">{{EnglishNameFriendly}} Glossary</li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="wh-content">
+        <h2 class="section-title">{{EnglishNameFriendly}} Glossary</h2>
+        <p>This table lists all translations for labels shown in RimWorld. Click on a label to see its <a href="https://rimworldwiki.com">RimWorld Wiki</a> page, if available. If a label is missing from this table, it may be because the translation file containing the label does not conform to the standard format, the label is not captured by the parser, or the label has not yet been translated.</p>
+        <p>Press CTRL+F to search. Click on a column header to sort.</p>
+        <p>Last updated on {{Timestamp}} for version {{GameVersion}}.</p>
+        <table class="js-sort-table js-sort-0 js-sort-asc">
+          <thead>
+            <tr>
+              <th>English</th>
+              <th>{{EnglishNameFriendly}}</th>
+              <th>Type</th>
+              <th>DLC</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{Rows}}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="wh-footer">Disclaimer: This is an unofficial community database. RimWorld is a registered trademark of Ludeon Studios.</div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RimWorld Translation: Glossaries</title>
+    <link rel="stylesheet" href="../static/style.css" />
+    <script src="../static/script.js"></script>
+  </head>
+
+  <body>
+    <div class="wh-container">
+      <div class="wh-header">
+        <h1>RimWorld Translation</h1>
+      </div>
+
+      <div class="wh-content">
+        <nav aria-label="Breadcrumb" class="wh-breadcrumbs">
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li class="current">Glossaries</li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="wh-content">
+        <h2 class="section-title">Glossaries</h2>
+        <p>Click on a language below to get a list of translations for labels shown in RimWorld. If a language is missing from this table, it may be because its translation files do not conform to the standard format or have not yet been translated.</p>
+        <p>Press CTRL+F to search. Click on a column header to sort.</p>
+        <p>Last updated on {{Timestamp}} for version {{GameVersion}}.</p>
+        <table class="js-sort-table js-sort-0 js-sort-asc">
+          <thead>
+            <tr>
+              <th>English</th>
+              <th>Translation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{Rows}}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="wh-footer">Disclaimer: This is an unofficial community database. RimWorld is a registered trademark of Ludeon Studios.</div>
+    </div>
+  </body>
+</html>
