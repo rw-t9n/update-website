@@ -50,13 +50,10 @@ function Get-DLCs {
 }
 
 $Root = if ($PSScriptRoot) { $PSScriptRoot } else { $PWD.Path }
-if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-  winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
-  $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-}
-if (-not (Test-Path "$Root\node_modules\prettier")) {
-  npm install prettier --save-dev --prefix "$Root"
-}
+$NodeJSInstalled = Get-Command node -ErrorAction SilentlyContinue
+winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+if (-not $NodeJSInstalled) { $env:Path = "C:\Program Files\nodejs;" + $env:Path }
+npm install --prefix "$Root" --no-fund
 $OutputDir = "$Root\website"
 $SteamPath = (Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam").InstallPath
 $GamePath = "$SteamPath\steamapps\common\RimWorld"
@@ -66,22 +63,22 @@ $Timestamp = [DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
 $Glossaries = @{}
 $TempPath = "$([System.IO.Path]::GetTempPath())\$([System.IO.Path]::GetFileNameWithoutExtension($PSCommandPath))"
 Remove-Item -Path $TempPath -Recurse -EA SilentlyContinue
-$Temp = New-Item -ItemType Directory -Path $TempPath
-Write-Host "Temp folder: $Temp"
+$TempRoot = New-Item -ItemType Directory -Path $TempPath
+Write-Host "Temp folder: $TempRoot"
 foreach ($DLC in $DLCs) {
-  Remove-Item -Path "$Temp\*" -Recurse
+  $TempDLC = New-Item -ItemType Directory -Path "$TempRoot\$DLC"
   Write-Host ""
   Write-Host "$DLC"
   Write-Host "----------------------"
   $Languages = Get-ChildItem -Path "$($DLC.FullName)\Languages"
-  $TempTar = "$Temp\temp.tar"
+  $TempTar = "$TempDLC\temp.tar"
   foreach ($Language in $Languages) {
     if ($Language.BaseName -notmatch '^(.+?)\s*\((.+)\)$') { continue }
     # if ($Language.BaseName -ne 'German (Deutsch)') { continue }
     Write-Host "Processing $($Language.BaseName)..."
     if ($Language.Extension -eq '.tar') {
       Copy-Item -Path $Language.FullName -Destination $TempTar -Force
-      $LanguageTemp = New-Item -ItemType Directory -Path "$Temp\$($Matches[1])"
+      $LanguageTemp = New-Item -ItemType Directory -Path "$TempDLC\$($Matches[1])"
       tar -xf $TempTar -C $LanguageTemp.FullName
       $Language = $LanguageTemp
     }
@@ -135,7 +132,6 @@ foreach ($DLC in $DLCs) {
     }
   }
 }
-Remove-Item -Path $Temp -Recurse -EA SilentlyContinue
 $GlossaryTemplate = Get-Content -Path "$Root\templates\glossaries\glossary.htm" -Raw
 $GlossariesIndexTemplate = Get-Content -Path "$Root\templates\glossaries\index.htm" -Raw
 $GlossariesIndexRows = @()
@@ -159,4 +155,5 @@ Set-Content -Path $Path -Value $Content -Encoding utf8
 Write-Host ""
 Write-Host "Formatting HTML files"
 Write-Host "----------------------"
-& npx prettier --write --cache --cache-strategy metadata "$OutputDir\glossaries\*.*"
+& npx prettier --write --cache --cache-strategy metadata --end-of-line auto "$OutputDir\glossaries\*.*"
+Start-Process cmd -ArgumentList "/c rmdir /s /q ""$TempRoot""" -WindowStyle Hidden
