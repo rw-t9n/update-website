@@ -1,3 +1,4 @@
+$ErrorActionPreference = "Stop"
 function Expand-Template {
   param($Template, $Vars)
   return [regex]::Replace($Template, '\{\{(.+?)\}\}', {
