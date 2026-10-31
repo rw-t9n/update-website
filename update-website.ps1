@@ -20,7 +20,7 @@ function Parse-XML {
   if (-not $XML) { return }
   $Entries = [Collections.Generic.List[object]]::new()
   foreach ($Node in $XML.SelectNodes("/LanguageData/*")) {
-    if ($Node.Name -notmatch '^\w+\.label$') { continue }
+    if ($Node.Name -notmatch '^\w+\.label(Short)?$') { continue }
     $prevSibling = $Node.PreviousSibling
     if (-not $prevSibling) { continue }
     if ($prevSibling.NodeType -ne 'Comment') { continue }
@@ -113,6 +113,7 @@ foreach ($DLC in $DLCs) {
       "Xenotype"
       "PsychicRitual"
       "Landmark"
+      "WorkType"
     )
     foreach ($Def in $Defs) {
       $Path = "$($Language.FullName)\DefInjected\$($Def)Def"
