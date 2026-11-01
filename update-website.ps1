@@ -9,7 +9,7 @@ function Expand-Template {
 }
 
 function Parse-XML {
-  param($XMLFile)
+  param($XMLFile, $LabelRegEx)
   try {
     [xml]$XML = Get-Content -Path $XMLFile.FullName -Encoding utf8
   }
@@ -20,7 +20,7 @@ function Parse-XML {
   if (-not $XML) { return }
   $Entries = [Collections.Generic.List[object]]::new()
   foreach ($Node in $XML.SelectNodes("/LanguageData/*")) {
-    if ($Node.Name -notmatch '^\w+\.label(Short)?$') { continue }
+    if ($Node.Name -notmatch "^$($LabelRegEx)$") { continue }
     $prevSibling = $Node.PreviousSibling
     if (-not $prevSibling) { continue }
     if ($prevSibling.NodeType -ne 'Comment') { continue }
@@ -96,38 +96,39 @@ foreach ($DLC in $DLCs) {
       $Glossaries[$Language.Name] = $LangInfo
     }
     $Glossary = $Glossaries[$Language.Name]
-    $Defs = @(
-      "Thing"
-      "ResearchProject"
-      "Stat"
-      "Ability"
-      "Incident"
-      "Biome"
-      "Skill"
-      "Hediff"
-      "Trait"
-      "RoyalTitle"
-      "WeaponTrait"
-      "Meme"
-      "Gene"
-      "Xenotype"
-      "PsychicRitual"
-      "Landmark"
-      "WorkType"
-    )
-    foreach ($Def in $Defs) {
-      $Path = "$($Language.FullName)\DefInjected\$($Def)Def"
-      $Def = ($Def -creplace '(?<!^)([A-Z])', '&nbsp;$1').ToLower()
+    $Defs = @{
+      "Thing" = "\w+\.label"
+      "ResearchProject" = "\w+\.label"
+      "Stat" = "\w+\.label"
+      "Ability" = "\w+\.label"
+      "Incident" = "\w+\.label"
+      "Biome" = "\w+\.label"
+      "Skill" = "\w+\.label"
+      "Hediff" = "\w+\.label"
+      "Trait" = ".+\.label"
+      "RoyalTitle" = "\w+\.label"
+      "WeaponTrait" = "\w+\.label"
+      "Meme" = "\w+\.label"
+      "Gene" = "\w+\.label"
+      "Xenotype" = "\w+\.label"
+      "PsychicRitual" = "\w+\.label"
+      "Landmark" = "\w+\.label"
+      "WorkType" = "\w+\.labelShort"
+    }
+    foreach ($Def in $Defs.GetEnumerator()) {
+      $DefName = $Def.Key; $DefLabelsRegEx = $Def.Value
+      $Path = "$($Language.FullName)\DefInjected\$($DefName)Def"
+      $DefNameFriendly = ($DefName -creplace '(?<!^)([A-Z])', '&nbsp;$1').ToLower()
       if (!(Test-Path $Path)) { continue }
       $XMLs = Get-ChildItem -Path $Path -Filter "*.xml" -Recurse
       foreach ($XML in $XMLs) {
         if ($XML.BaseName -eq 'ImpliedDefs') { continue }
         if ($XML.BaseName -like 'Ethereal_*') { continue }
-        $Rows = foreach ($Fields in (Parse-XML $XML)) {
+        $Rows = foreach ($Fields in (Parse-XML $XML $DefLabelsRegEx)) {
           $English, $Translation = $Fields
           $EnglishEncoded = [System.Uri]::EscapeDataString($English)
           $English = "<a href=""https://rimworldwiki.com/wiki/$EnglishEncoded"">$English</a>"
-          Create-Row $English $Translation $Def $DLC
+          Create-Row $English $Translation $DefNameFriendly $DLC
         }
         $Glossary.Rows += $Rows
       }
