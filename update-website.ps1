@@ -51,6 +51,7 @@ function Get-DLCs {
 }
 
 git submodule update --init --remote --force
+git -C website checkout -B main origin/main
 $Root = if ($PSScriptRoot) { $PSScriptRoot } else { $PWD.Path }
 $NodeJSInstalled = Get-Command node -ErrorAction SilentlyContinue
 winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
