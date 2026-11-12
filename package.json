@@ -1,7 +1,6 @@
 {
   "private": true,
   "devDependencies": {
-    "prettier": "^3.9.10",
-    "static-sitemap-cli": "^3.0.0"
+    "prettier": "^3.9.10"
   }
 }

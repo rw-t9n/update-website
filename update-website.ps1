@@ -162,4 +162,3 @@ Write-Host "Formatting HTML files"
 Write-Host "----------------------"
 & npx prettier --write --cache --cache-strategy metadata --end-of-line auto "$OutputDir\glossaries\*.*"
 Start-Process cmd -ArgumentList "/c rmdir /s /q ""$TempRoot""" -WindowStyle Hidden
-& npx sscli -b "https://rw-t9n.github.io" -d "$OutputDir" -m "**/*.htm" -f "xml"
