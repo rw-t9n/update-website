@@ -105,7 +105,8 @@ $Defs = @(
   ("PsychicRitual", "\w+\.label", "Psychic_rituals"),
   ("Landmark", "\w+\.label", "Landmarks"),
   ("WorkType", "\w+\.labelShort", "Work"),
-  ("Faction", "\w+\.label")
+  ("Faction", "\w+\.label"),
+  ("RoomRole", "\w+\.label")
 )
 
 $CacheFile = "wiki_titles.txt"
