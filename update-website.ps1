@@ -18,7 +18,6 @@ function Parse-XML {
     return
   }
   if (-not $XML) { return }
-  $Entries = [Collections.Generic.List[object]]::new()
   foreach ($Node in $XML.SelectNodes("/LanguageData/*")) {
     if ($Node.Name -notmatch "^$($LabelRegEx)$") { continue }
     $prevSibling = $Node.PreviousSibling
@@ -27,10 +26,11 @@ function Parse-XML {
     if ($prevSibling.Value.Trim() -notmatch '^EN: (.*)$') { continue }
     $English = $Matches[1]
     $Translation = $Node.InnerText.Trim()
-    if ($English -eq 'Mote' -or $Translation -eq 'TODO') { continue }
-    $Entries.Add(@($English, $Translation))
+    [PSCustomObject]@{
+      English = $English
+      Translation = $Translation
+    }
   }
-  return Write-Output -NoEnumerate $Entries
 }
 
 function Create-Row {
@@ -154,13 +154,13 @@ foreach ($Language in Get-ChildItem -Path "$GamePath\Data\Core\Languages") {
   $Glossary.NativeName = $Matches[2]
   $Glossary.Rows = @()
   $Glossary.BaseNameKebabCase = ($Glossary.EnglishName -creplace '(?<!^)([A-Z])', '-$1').ToLower()
-  $GlossaryEntries = @()
   $TempLang = New-Item -ItemType Directory -Path "$TempRoot\$($Glossary.EnglishName)"
   Write-Host ""
   Write-Host "$Language"
   Write-Host "----------------------"
+  $EntryId = 0
   $TempTar = "$TempLang\temp.tar"
-  foreach ($DLC in $DLCs) {
+  $GlossaryEntries = foreach ($DLC in $DLCs) {
     $TransFilePath = "$GamePath\Data\$DLC\Languages\$Language"
     if (!(Test-Path $TransFilePath)) { continue }
     $TransFile = Get-Item $TransFilePath
@@ -186,31 +186,37 @@ foreach ($Language in Get-ChildItem -Path "$GamePath\Data\Core\Languages") {
       foreach ($XML in $XMLs) {
         if ($XML.BaseName -eq 'ImpliedDefs') { continue }
         if ($XML.BaseName -like 'Ethereal_*') { continue }
-        $Entries = @(foreach ($Fields in (Parse-XML $XML $DefLabelsRegEx)) {
-          $English, $Translation = $Fields
-          ,@($English, $Translation, $DefName, $DLC.BaseName, $DefWikiPage)
-        })
-        $GlossaryEntries += $Entries
+        foreach ($Match in (Parse-XML $XML $DefLabelsRegEx)) {
+          if ($Match.English -eq 'Mote') { continue }
+          if ($Match.Translation -eq 'TODO') { continue }
+          [PSCustomObject]@{
+            Id = $EntryId++
+            English = $Match.English
+            Translation = $Match.Translation
+            DefName = $DefName
+            DLC = $DLC.BaseName
+            WikiPage = $DefWikiPage
+          }
+        }
       }
     }
   }
   # Create table rows:
-  $Rows = foreach ($Entry in ($GlossaryEntries | Sort-Object { $_[0] })) {
-    $English, $Translation, $DefName, $DLC, $DefWikiPage = $Entry
-    $DefNameFriendly = ($DefName -creplace '(?<!^)([A-Z])', '&nbsp;$1').ToLower()
-    if ($DefWikiPage) {
-      $Fragment = $English.Substring(0, 1).ToUpper() + $English.Substring(1)
+  $Rows = foreach ($Entry in ($GlossaryEntries | Sort-Object English, Id)) {
+    $DefNameFriendly = ($Entry.DefName -creplace '(?<!^)([A-Z])', '&nbsp;$1').ToLower()
+    if ($Entry.WikiPage) {
+      $Fragment = $Entry.English.Substring(0, 1).ToUpper() + $Entry.English.Substring(1)
       $Fragment = ConvertTo-WikiIdAttr $Fragment 'legacy'
-      $Page = "$DefWikiPage#$Fragment"
+      $Page = "$($Entry.WikiPage)#$Fragment"
     }
-    elseif ($TitleMap.ContainsKey($English)) {
-      $page = "$(ConvertTo-WikiTitle $TitleMap[$English])"
+    elseif ($TitleMap.ContainsKey($Entry.English)) {
+      $Page = "$(ConvertTo-WikiTitle $TitleMap[$Entry.English])"
     }
     else {
-      $Page = "Special:Search/$([System.Uri]::EscapeDataString($English))"
+      $Page = "Special:Search/$([System.Uri]::EscapeDataString($Entry.English))"
     }
-    $English = "<a href=""$GameWikiUrl/wiki/$Page"">$English</a>"
-    Create-Row $English $Translation $DefNameFriendly $DLC
+    $EnglishLink = "<a href=""$GameWikiUrl/wiki/$Page"">$($Entry.English)</a>"
+    Create-Row $EnglishLink $Entry.Translation $DefNameFriendly $Entry.DLC
   }
   $Glossary.Rows = $Rows | Select-Object -Unique
 }
