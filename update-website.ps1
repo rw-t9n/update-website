@@ -220,18 +220,17 @@ foreach ($Language in Get-ChildItem -Path "$GamePath\Data\Core\Languages") {
     $EnglishLink = "<a href=""$GameWikiUrl/wiki/$Page"">$($Entry.English)</a>"
     Create-Row $EnglishLink $Entry.Translation $DefNameFriendly $Entry.DLC
   }
-  $Glossary.Rows = $Rows | Select-Object -Unique
+  $Glossary.Rows = $Rows | Group-Object { $_.ToLowerInvariant() } | ForEach-Object { $_.Group[0] }
 }
 
 $GlossaryTemplate = Get-Content -Path "$Root\templates\glossaries\glossary.htm" -Raw
 $GlossariesIndexTemplate = Get-Content -Path "$Root\templates\glossaries\index.htm" -Raw
-$GlossariesIndexRows = @()
 $Entries = $Glossaries.GetEnumerator() | Sort-Object -Property { $_.Value.EnglishNameFriendly }
-foreach ($Entry in $Entries) {
+$GlossariesIndexRows = foreach ($Entry in $Entries) {
   $Glossary = $Entry.Value
   if ($Glossary.Rows.Count -eq 0) { continue }
   $English = "<a href=""$($Glossary.BaseNameKebabCase).htm"">$($Glossary.EnglishNameFriendly)</a>"
-  $GlossariesIndexRows += Create-Row $English $Glossary.NativeNameFriendly
+  Create-Row $English $Glossary.NativeNameFriendly
   $Glossary.Timestamp = $Timestamp
   $Glossary.GameVersion = $GameVersion
   $Path = "$OutputDir\glossaries\$($Glossary.BaseNameKebabCase).htm"
