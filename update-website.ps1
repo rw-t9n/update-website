@@ -223,8 +223,8 @@ foreach ($Language in Get-ChildItem -Path "$GamePath\Data\Core\Languages") {
   $Glossary.Rows = $Rows | Group-Object { $_.ToLowerInvariant() } | ForEach-Object { $_.Group[0] }
 }
 
-$GlossaryTemplate = Get-Content -Path "$Root\templates\glossaries\glossary.htm" -Raw
-$GlossariesIndexTemplate = Get-Content -Path "$Root\templates\glossaries\index.htm" -Raw
+$GlossaryTemplate = Get-Content -Path "$Root\templates\glossaries\glossary.htm" -Raw -Encoding utf8
+$GlossariesIndexTemplate = Get-Content -Path "$Root\templates\glossaries\index.htm" -Raw -Encoding utf8
 $Entries = $Glossaries.GetEnumerator() | Sort-Object -Property { $_.Value.EnglishNameFriendly }
 $GlossariesIndexRows = foreach ($Entry in $Entries) {
   $Glossary = $Entry.Value
